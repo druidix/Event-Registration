@@ -2,13 +2,15 @@
 
 use Test::Most;
 use DateTime;
+use String::Random;
 
 use Event;
 use Venue;
+use Person;
 
 # Moose autogenerates these methods on object instantiation
 my @moose_methods = qw( dump BUILDALL DESTROY DEMOLISHALL can meta BUILDARGS isa does VERSION new DOES );
-my @our_methods = qw( start_date end_date venue private );
+my @our_methods = qw( start_date end_date venue private admin );
 
 my %known_methods = map { $_ => 1 } @moose_methods, @our_methods;
 
@@ -37,12 +39,25 @@ my $end_date = DateTime->new(
     day     => $day,
 );
 
+my $random = String::Random->new;
+my $email = $random->randpattern( 'cccccnnn' ) . '@palebluedot.net';
+my $admin = Person->new( email => $email );
+
 # Requires necessary attributes
 throws_ok {
     Event->new(
         start_date  => $start_date,
         end_date    => $end_date,
         private     => 0,
+    )
+} qr/Attribute \(admin\) is required/, "'admin' attribute is required";
+
+throws_ok {
+    Event->new(
+        start_date  => $start_date,
+        end_date    => $end_date,
+        private     => 0,
+        admin       => $admin,
     )
 } qr/Attribute \(venue\) is required/, "'venue' attribute is required";
 
@@ -52,6 +67,7 @@ throws_ok {
         start_date  => $start_date,
         end_date    => $end_date,
         private     => 0,
+        admin       => $admin,
         venue       => 1,
     )
 } qr/does not pass the type constraint/, "'venue' attribute must be 'Venue' class";
@@ -61,6 +77,7 @@ isa_ok(
         start_date  => $start_date,
         end_date    => $end_date,
         private     => 0,
+        admin       => $admin,
         venue => Venue->new(name => 'foo')
     ), 'Event'
 );

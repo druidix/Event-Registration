@@ -2,6 +2,7 @@
 
 use Test::Most;
 use DateTime;
+use String::Random;
 
 use Event;
 use Venue;
@@ -42,8 +43,12 @@ my $end_date = DateTime->new(
     day     => $day,
 );
 
+my $random = String::Random->new;
+my $email = $random->randpattern( 'cccccnnn' ) . '@palebluedot.net';
+my $admin = Person->new( email => $email );
+
 my $venue  = Venue->new( name => 'foo' );
-my $event  = Event->new( start_date => $start_date, end_date => $end_date, venue => $venue, private => 0 );
+my $event  = Event->new( start_date => $start_date, end_date => $end_date, venue => $venue, private => 0, admin => $admin );
 my $person = Person->new( email => 'foo@bar.com', first_name => 'Slarty', last_name => 'Warty' );
 
 isa_ok( Event::Registration->new(event => $event, attendee => $person ), 'Event::Registration' );
