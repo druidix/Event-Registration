@@ -65,7 +65,6 @@ throws_ok {
     )
 } qr/does not pass the type constraint/, "'admin' attribute must be 'Person' class";
 
-
 throws_ok {
     Event->new(
         start_date  => $start_date,
