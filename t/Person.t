@@ -7,7 +7,7 @@ use Person;
 
 # Moose autogenerates these methods on object instantiation
 my @moose_methods = qw( dump BUILDALL DESTROY DEMOLISHALL can meta BUILDARGS isa does VERSION new DOES );
-my @our_methods = qw( email first_name last_name );
+my @our_methods = qw( email first_name last_name can_edit_event make_admin );
 
 my %known_methods = map { $_ => 1 } @moose_methods, @our_methods;
 
@@ -23,6 +23,14 @@ my $email = $random->randpattern( 'cccccnnn' ) . '@palebluedot.net';
 # Requires necessary attributes
 throws_ok { Person->new() } qr/Attribute \(email\) is required/, "'email' attribute is required"; 
 
-isa_ok( Person->new( email => $email ), 'Person' );
+my $person = Person->new( email => $email );
+
+isa_ok( $person, 'Person' );
+is( $person->can_edit_event, 0, 'Cannot edit event by default' );
+
+$person->make_admin();
+
+is( $person->can_edit_event, 1, 'Can edit event by after being made admin' );
+
 
 done_testing;

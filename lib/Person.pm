@@ -3,6 +3,8 @@ package Person;
 use namespace::autoclean;
 use Moose;
 
+with 'Admin';
+
 has 'email'         => ( is => 'rw', required => 1, isa => 'Str' );
 has 'first_name'    => ( is => 'rw', required => 0, isa => 'Str' );
 has 'last_name'     => ( is => 'rw', required => 0, isa => 'Str' );

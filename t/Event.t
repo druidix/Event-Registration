@@ -11,7 +11,7 @@ use Person;
 
 # Moose autogenerates these methods on object instantiation
 my @moose_methods = qw( dump BUILDALL DESTROY DEMOLISHALL can meta BUILDARGS isa does VERSION new DOES );
-my @our_methods = qw( start_date end_date venue private admin );
+my @our_methods = qw( start_date end_date venue private admin BUILD );
 
 my %known_methods = map { $_ => 1 } @moose_methods, @our_methods;
 
@@ -43,7 +43,7 @@ my $end_date = DateTime->new(
 
 my $random = String::Random->new;
 my $email = $random->randpattern( 'cccccnnn' ) . '@palebluedot.net';
-my $admin = Person->new( email => $email );
+my $person = Person->new( email => $email );
 
 # Requires necessary attributes
 throws_ok {
@@ -70,7 +70,7 @@ throws_ok {
         start_date  => $start_date,
         end_date    => $end_date,
         private     => 0,
-        admin       => $admin,
+        admin       => $person,
     )
 } qr/Attribute \(venue\) is required/, "'venue' attribute is required";
 
@@ -80,19 +80,35 @@ throws_ok {
         start_date  => $start_date,
         end_date    => $end_date,
         private     => 0,
-        admin       => $admin,
+        admin       => $person,
         venue       => 1,
     )
 } qr/does not pass the type constraint/, "'venue' attribute must be 'Venue' class";
 
-isa_ok( 
+
+throws_ok { 
     Event->new(
         start_date  => $start_date,
         end_date    => $end_date,
         private     => 0,
-        admin       => $admin,
-        venue => Venue->new(name => 'foo')
-    ), 'Event'
+        admin       => $person,
+        venue       => Venue->new(name => 'foo'),
+    )
+} qr/does not have admin rights/, 'Constructor dies if admin does not have admin rights';
+
+$person->make_admin();
+
+isa_ok(
+    Event->new(
+        start_date  => $start_date,
+        end_date    => $end_date,
+        private     => 0,
+        admin       => $person,
+        venue       => Venue->new(name => 'foo'),
+    ),
+    'Event'
 );
+
+
 
 done_testing;
