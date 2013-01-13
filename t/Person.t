@@ -10,7 +10,7 @@ my @moose_methods = qw( dump BUILDALL DESTROY DEMOLISHALL can meta BUILDARGS isa
 my @our_methods = qw( 
     email first_name last_name can_edit_event 
     can_edit_registration make_admin registration
-    has_registration cancel_registration
+    has_registration register cancel_registration
 );
 
 my %known_methods = map { $_ => 1 } @moose_methods, @our_methods;
@@ -69,8 +69,13 @@ my $event = Event->new(
 my $guest_email = $random->randpattern( 'cccccnnn' ) . '@palebluedot.net';
 my $guest = Person->new( email => $guest_email );
 
-#ok( $guest->register($event), 'Non-admin user can register for an event' );
-#ok( $guest->cancel_registration($event), 'Non-admin user can cancel existing registration for an event' );
+is( $guest->has_registration(), '', 'has_registration predicate returns false before registration' );
+ok( $guest->register(event => $event), 'Non-admin user can successfully register for an event' );
+is( $guest->has_registration(), 1, 'has_registration predicate returns true after successful registration' );
+
+ok( $guest->cancel_registration($event), 'Non-admin user can cancel existing registration for an event' );
+is( $guest->has_registration(), '', 'has_registration predicate returns false after cancellation' );
+is( $guest->registration(), undef, 'registration() returns undef after cancellation' );
 
 
 done_testing;

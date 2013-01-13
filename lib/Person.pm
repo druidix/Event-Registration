@@ -2,7 +2,10 @@ package Person;
 
 use namespace::autoclean;
 
-use EventMoose;
+use Moose;
+use MooseX::Method::Signatures;
+
+use Event::Registration;
 
 with 'Admin';
 
@@ -19,9 +22,12 @@ has 'registration'  => (
 );
 
 
-#sub register {
-#
-#    
-#}
+method register ( Event :$event ) {
+
+    my $reg = Event::Registration->new( event => $event, attendee => $self );
+    $self->registration( $reg );
+
+    return $self;
+}
 
 __PACKAGE__->meta->make_immutable;
