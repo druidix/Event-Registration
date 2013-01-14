@@ -13,21 +13,28 @@ has 'email'         => ( is => 'rw', required => 1, isa => 'Str' );
 has 'first_name'    => ( is => 'rw', required => 0, isa => 'Str' );
 has 'last_name'     => ( is => 'rw', required => 0, isa => 'Str' );
 
-has 'registration'  => (
+has 'registrations'  => (
     is          => 'rw',
     required    => 0,
-    isa         => 'Event::Registration',
-    clearer     => 'cancel_registration',
-    predicate   => 'has_registration',
+    default     => sub{ [] },
+    isa         => 'ArrayRef[ Event::Registration ]',
+    clearer     => 'cancel_all_registrations',
 );
 
 
 method register ( Event :$event ) {
 
     my $reg = Event::Registration->new( event => $event, attendee => $self );
-    $self->registration( $reg );
+
+    $self->registrations( [@{$self->registrations()}, $reg] );
 
     return $self;
+}
+
+method cancel_all_registrations {
+
+    $self->registrations( [] );
+    return [];
 }
 
 __PACKAGE__->meta->make_immutable;
