@@ -11,7 +11,7 @@ use Person;
 
 # Moose autogenerates these methods on object instantiation
 my @moose_methods = qw( dump BUILDALL DESTROY DEMOLISHALL can meta BUILDARGS isa does VERSION new DOES );
-my @our_methods = qw( start_date end_date venue private admin BUILD );
+my @our_methods = qw( start_date end_date venue private owner name );
 
 my %known_methods = map { $_ => 1 } @moose_methods, @our_methods;
 
@@ -48,62 +48,94 @@ my $person = Person->new( email => $email );
 # Requires necessary attributes
 throws_ok {
     Event->new(
+        venue       => Venue->new(name => 'bar'),
+        owner       => $person,
         start_date  => $start_date,
         end_date    => $end_date,
         private     => 0,
     )
-} qr/Attribute \(admin\) is required/, "'admin' attribute is required";
+} qr/Attribute \(name\) is required/, "'name' attribute is required";
+
+throws_ok {
+    Event->new(
+        venue       => Venue->new(name => 'bar'),
+        owner       => $person,
+        name        => 'foo',
+        end_date    => $end_date,
+        private     => 0,
+    )
+} qr/Attribute \(start_date\) is required/, "'start_date' attribute is required";
+
+throws_ok {
+    Event->new(
+        venue       => Venue->new(name => 'bar'),
+        owner       => $person,
+        name        => 'foo',
+        start_date  => $start_date,
+        private     => 0,
+    )
+} qr/Attribute \(end_date\) is required/, "'end_date' attribute is required";
+
+throws_ok {
+    Event->new(
+        venue       => Venue->new(name => 'bar'),
+        owner       => $person,
+        name        => 'foo',
+        start_date  => $start_date,
+        end_date    => $end_date,
+    )
+} qr/Attribute \(private\) is required/, "'private' attribute is required";
+
+throws_ok {
+    Event->new(
+        name        => 'foo',
+        start_date  => $start_date,
+        end_date    => $end_date,
+        private     => 0,
+    )
+} qr/Attribute \(owner\) is required/, "'owner' attribute is required";
 
 # Required attribute class must be of correct class
 throws_ok { 
     Event->new(
+        name        => 'foo',
         start_date  => $start_date,
         end_date    => $end_date,
         private     => 0,
-        admin       => 1,
+        owner       => 1,
         venue       => 1,
     )
-} qr/does not pass the type constraint/, "'admin' attribute must be 'Person' class";
+} qr/does not pass the type constraint/, "'owner' attribute must be 'Person' class";
 
 throws_ok {
     Event->new(
+        name        => 'foo',
         start_date  => $start_date,
         end_date    => $end_date,
         private     => 0,
-        admin       => $person,
+        owner       => $person,
     )
 } qr/Attribute \(venue\) is required/, "'venue' attribute is required";
 
 # Required attribute class must be of correct class
 throws_ok { 
     Event->new(
+        name        => 'foo',
         start_date  => $start_date,
         end_date    => $end_date,
         private     => 0,
-        admin       => $person,
+        owner       => $person,
         venue       => 1,
     )
 } qr/does not pass the type constraint/, "'venue' attribute must be 'Venue' class";
 
-
-throws_ok { 
-    Event->new(
-        start_date  => $start_date,
-        end_date    => $end_date,
-        private     => 0,
-        admin       => $person,
-        venue       => Venue->new(name => 'foo'),
-    )
-} qr/does not have admin rights/, 'Constructor dies if admin does not have admin rights';
-
-$person->make_admin();
-
 isa_ok(
     Event->new(
+        name        => 'foo',
         start_date  => $start_date,
         end_date    => $end_date,
         private     => 0,
-        admin       => $person,
+        owner       => $person,
         venue       => Venue->new(name => 'foo'),
     ),
     'Event'

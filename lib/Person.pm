@@ -34,7 +34,7 @@ method register ( Event :$event ) {
 method cancel_all_registrations {
 
     $self->registrations( [] );
-    return [];
+    return 1;
 }
 
 __PACKAGE__->meta->make_immutable;

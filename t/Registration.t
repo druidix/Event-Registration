@@ -50,11 +50,12 @@ $person->make_admin();
 my $venue  = Venue->new( name => 'foo' );
 
 my $event  = Event->new( 
+    name        => 'bar',
+    owner       => $person,
     start_date  => $start_date,
     end_date    => $end_date,
     venue       => $venue,
     private     => 0,
-    admin       => $person 
 );
 
 my $guest = Person->new( email => 'foo@bar.com', first_name => 'Slarty', last_name => 'Warty' );
