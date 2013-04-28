@@ -54,6 +54,8 @@ method can_edit_event ( Event :$event! ) {
     return ( $is_admin || lc($self->email) eq lc($event->owner->email) ) ? 1 : 0;
 }
 
+# You can edit a given registration either if it's your own or you're an admin for the event to which the
+# registration is attached.
 method can_edit_registration ( Event::Registration :$reg! ) {
 
     return ( lc($reg->attendee->email) eq lc($self->email) || $self->can_edit_event(event => $reg->event) ) ? 1 : 0;
