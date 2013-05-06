@@ -45,7 +45,6 @@ my $end_date = DateTime->new(
 my $random = String::Random->new;
 my $email = $random->randpattern( 'cccccnnn' ) . '@palebluedot.net';
 my $person = Person->new( email => $email );
-$person->make_admin();
 
 my $venue  = Venue->new( name => 'foo' );
 

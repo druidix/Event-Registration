@@ -6,6 +6,7 @@ use Moose;
 use MooseX::Method::Signatures;
 
 use Event::Registration;
+use Util;
 
 with 'Admin';
 
@@ -35,6 +36,23 @@ method cancel_all_registrations {
 
     $self->registrations( [] );
     return 1;
+}
+
+method get_registration ( Event :$event ) {
+
+    my $normalized_query_name = normalize_string( $event->name );
+    my $reg_to_return = undef;
+
+    foreach my $reg ( @{$self->registrations} ) {
+
+        if ( normalize_string($reg->event->name) eq $normalized_query_name ) {
+
+            $reg_to_return = $reg if ( normalize_string($reg->event->name) eq $normalized_query_name );
+            last;
+        }
+    }
+    
+    return $reg_to_return;
 }
 
 __PACKAGE__->meta->make_immutable;

@@ -5,6 +5,7 @@ use MooseX::Method::Signatures;
 
 use Event;
 use Event::Registration;
+use Util;
 
 # This role is meant to be used with a person object on a per-event basis.  A person can be made into an admin
 # for one or more events.  Once she is an admin for an event, she can edit not only that event, but also the
@@ -26,32 +27,42 @@ method cancel_all_admin_privileges {
     return 1;
 }
 
-# TODO: This method needs to require an event object to be passed in.
-method make_admin ( Event :$event ) {
+# In order to make someone an admin for an event, you yourself must have admin rights for that event.
+# Note that the admin_for_events attribute gets modified for the Person object passed in, not for $self
+method make_admin_for_event ( Event :$event!, Person :$person! ) {
 
+    die "You don't have admin rights to the event [" . $event->name . "]" 
+        unless ( $self->can_edit_event(event => $event) );
+
+    $person->admin_for_events( [$event, @{$self->admin_for_events}] );
+
+    return 1;
 }
 
 # You can edit the event if you own it or if you have been given admin rights to it
 method can_edit_event ( Event :$event! ) {
 
-    my $is_admin = 0;
+    my $is_admin_for_event = 0;
+    my $is_event_owner = lc($self->email) eq lc($event->owner->email);
 
-    # This should work, remove spaces as well
-    my $normalized_event_name = $self->normalize_string( lc($event->name) );
+    # Only go through this loop if we're not the event owner
+    if ( !$is_event_owner ) {
 
-    foreach my $admin_for_event ( @{$self->admin_for_events} ) {
+        my $normalized_event_name = normalize_string( lc($event->name) );
 
-        
-        my $normalized_name = $self->normalize_string( lc($admin_for_event->name) );
+        foreach my $admin_for_event ( @{$self->admin_for_events} ) {
 
-        if ( $normalized_event_name eq $normalized_name ) {
+            my $normalized_name = $self->normalize_string( lc($admin_for_event->name) );
 
-            $is_admin++;
-            last;
+            if ( $normalized_event_name eq $normalized_name ) {
+
+                $is_admin_for_event++;
+                last;
+            }
         }
     }
 
-    return ( $is_admin || lc($self->email) eq lc($event->owner->email) ) ? 1 : 0;
+    return ( $is_event_owner || $is_admin_for_event );
 }
 
 # You can edit a given registration either if it's your own or you're an admin for the event to which the
@@ -60,17 +71,6 @@ method can_edit_registration ( Event::Registration :$reg! ) {
 
     return ( lc($reg->attendee->email) eq lc($self->email) || $self->can_edit_event(event => $reg->event) ) ? 1 : 0;
 };
-
-# This is to be used as long we don't have unique IDs for different objects.  To ensure a reasonable match,
-# we take names (e.g. event names) and remove all non-alpha-numeric entities from them (note that this
-# includes spaces!)
-method normalize_string( Str $str! ) {
-
-    my $normalized = ${str};
-    $normalized =~ s/[^a-z A-Z 0-9]+//g;
-
-    return $normalized;
-}
 
 
 1;

@@ -8,10 +8,10 @@ use Test;
 # Moose autogenerates these methods on object instantiation
 my @moose_methods = qw( dump BUILDALL DESTROY DEMOLISHALL can meta BUILDARGS isa does VERSION new DOES );
 my @our_methods = qw( 
-    email first_name last_name can_edit_event 
-    can_edit_registration make_admin registrations admin_for_events
+    email first_name last_name can_edit_event can_edit_registration
+    make_admin_for_event registrations admin_for_events
     register cancel_all_registrations cancel_all_admin_privileges
-    normalize_string
+    get_registration
 );
 
 my %known_methods = map { $_ => 1 } @moose_methods, @our_methods;
@@ -68,12 +68,6 @@ my $event0 = Event->new(
 isa_ok( $event_owner, 'Person' );
 is( $event_owner->can_edit_event(event => $event0), 1, 'Can edit owned event by default' );
 
-# TODO:  Rewrite these tests after implementing admin creation
-#$person->make_admin();
-#
-#is( $person->can_edit_event, 1, 'Can edit event by after being made admin' );
-#is( $person->can_edit_registration, 1, 'Can edit registration after being made admin' );
-
 my $dt      = DateTime->now;
 my $year    = $dt->year;
 my $month   = $dt->month;
@@ -103,6 +97,43 @@ my $event1 = Event->new(
     venue       => Venue->new(name => 'foo'),
 );
 
+foreach my $event ( $event0, $event1 ) {
+
+    ok( $guest->register(event => $event), 'Non-admin user can successfully register for event' );
+}
+
+is( ref($guest->registrations()), 'ARRAY', 'registrations() is a list ref' );
+is( scalar(@{$guest->registrations()}), 2, 'registrations() returns expected number of items' );
+
+foreach my $reg ( @{$guest->registrations()} ) {
+    
+    isa_ok( $reg, 'Event::Registration' );
+
+    if ( lc($reg->event->owner->email) eq lc($event_owner->email) ) {
+
+        is( $event_owner->can_edit_registration(reg => $reg), 1, "Event owner can edit a guest's registration by default" );
+    }
+}
+
+# Admin tests
+# $event_owner owns $event0 so an admin calls to $event1 should fail
+throws_ok { $event_owner->make_admin_for_event(event => $event1, person => $guest); }
+    qr/don't have admin rights/, "Trying to call admin function without admin rights fails"; 
+
+is( $event_owner->can_edit_event(event => $event1), 0, 'Cannot edit event not owned by self and no admin rights' );
+
+my $non_owned_reg = $guest->get_registration( event => $event1 );
+isa_ok( $non_owned_reg, 'Event::Registration' );
+
+is(
+    $event_owner->can_edit_registration(reg => $non_owned_reg),
+    0,
+    "Cannot edit registration for event not owned by self and no admin rights"
+);
+
+#is( $person->can_edit_event, 1, 'Can edit event by after being made admin' );
+#is( $person->can_edit_registration, 1, 'Can edit registration after being made admin' );
+
 # Make another set of dates after the first set
 #my ( $start_year2, $start_month2, $start_day2 ) = Add_Delta_Days( $year, $month, $day, 5 );
 #my ( $end_year2, $end_month2, $end_day2 ) = Add_Delta_Days( $start_year2, $start_month2, $start_day2, 2 );
@@ -127,24 +158,6 @@ my $event1 = Event->new(
 #    owner       => $other_event_owner,
 #    venue       => Venue->new(name => 'foo'),
 #);
-
-foreach my $event ( $event0, $event1 ) {
-
-    ok( $guest->register(event => $event), 'Non-admin user can successfully register for event' );
-}
-
-is( ref($guest->registrations()), 'ARRAY', 'registrations() is a list ref' );
-is( scalar(@{$guest->registrations()}), 2, 'registrations() returns expected number of items' );
-
-foreach my $reg ( @{$guest->registrations()} ) {
-    
-    isa_ok( $reg, 'Event::Registration' );
-
-    if ( lc($reg->event->owner->email) eq lc($event_owner->email) ) {
-
-        is( $event_owner->can_edit_registration(reg => $reg), 1, "Event owner can edit a guest's registration by default" );
-    }
-}
 
 ok( $guest->cancel_all_registrations(), 'Non-admin user can cancel all of her existing registrations' );
 is_deeply( $guest->registrations(), [], 'registrations() returns empty list ref after cancellation' );
