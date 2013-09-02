@@ -11,7 +11,7 @@ use Person;
 
 # Moose autogenerates these methods on object instantiation
 my @moose_methods = qw( dump BUILDALL DESTROY DEMOLISHALL can meta BUILDARGS isa does VERSION new DOES );
-my @our_methods = qw( start_date end_date venue private owner name );
+my @our_methods = qw( start_date end_date venue private owner name is_owner );
 
 my %known_methods = map { $_ => 1 } @moose_methods, @our_methods;
 

@@ -2,6 +2,9 @@ package Event;
 
 use namespace::autoclean;
 use Moose;
+use MooseX::Method::Signatures;
+
+use Person;
 
 # Attributes that are themselves objects
 has 'owner'         => ( is => 'rw', required => 1, isa => 'Person'   );
@@ -14,4 +17,8 @@ has 'end_date'      => ( is => 'rw', required => 1, isa => 'DateTime' );
 has 'private'       => ( is => 'rw', required => 1, isa => 'Bool'     );
 
 
+method is_owner ( Person :$person! ) {
+
+    return ( lc($person->email) eq lc($self->owner->email()) ) ? 1 : 0;
+}
 __PACKAGE__->meta->make_immutable;

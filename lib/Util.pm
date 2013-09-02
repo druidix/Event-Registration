@@ -14,7 +14,7 @@ sub normalize_string {
     my $str = shift;
     die "Must supply string to normalize!" unless( $str );
 
-    my $normalized = $str;
+    my $normalized = lc( $str );
     $normalized =~ s/[^a-z A-Z 0-9]+//g;
 
     return $normalized;
